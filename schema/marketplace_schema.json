@@ -1,0 +1,66 @@
+[
+    {
+        "name": "block_number",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": "Ethereum block number"
+    },
+    {
+        "name": "log_index",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": "Ethereum log index"
+    },
+    {
+        "name": "listing_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": "Unique id of the listing"
+    },
+    {
+        "name": "ipfs_hash",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": "IPFS hash of the listing data"
+    },
+    {
+        "name": "listing_type",
+        "type": "STRING",
+        "description": "Unit, fractional, etc..."
+    },
+    {
+        "name": "category",
+        "type": "STRING",
+        "description": "Category"
+    },
+    {
+        "name": "subcategory",
+        "type": "STRING",
+        "description": "Category"
+    },
+    {
+        "name": "language",
+        "type": "STRING",
+        "description": "Language"
+    },
+    {
+        "name": "title",
+        "type": "STRING",
+        "description": "Listing title"
+    },
+    {
+        "name": "description",
+        "type": "STRING",
+        "description": "Product description"
+    },
+    {
+        "name": "price",
+        "type": "FLOAT64",
+        "description": "Listing price"
+    },
+    {
+        "name": "currency",
+        "type": "STRING",
+        "description": "Listing currency"
+    }
+]

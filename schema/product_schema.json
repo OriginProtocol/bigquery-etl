@@ -1,0 +1,85 @@
+[
+    {
+        "name": "block_number",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": "Ethereum block number"
+    },
+    {
+        "name": "log_index",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": "Ethereum log index"
+    },
+    {
+        "name": "listing_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": "Marketplace listing_id"
+    },
+    {
+        "name": "product_id",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": "Unique product id"
+    },
+    {
+        "name": "ipfs_path",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": "Location of the product data on IPFS"
+    },
+    {
+        "name": "external_id",
+        "type": "STRING",
+        "description": "External product id"
+    },
+    {
+        "name": "parent_external_id",
+        "type": "STRING",
+        "description": "External id for the parent product"
+    },
+    {
+        "name": "title",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": "Product title"
+    },
+    {
+        "name": "description",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": "Product description"
+    },
+    {
+        "name": "price",
+        "type": "INTEGER",
+        "mode": "REQUIRED",
+        "description": "Product price"
+    },
+    {
+        "name": "currency",
+        "type": "STRING",
+        "description": "Product price currency"
+    },
+    {
+        "name": "option1",
+        "type": "STRING",
+        "description": "Variant option 1"
+    },
+    {
+        "name": "option2",
+        "type": "STRING",
+        "description": "Variant option 3"
+    },
+    {
+        "name": "option3",
+        "type": "STRING",
+        "description": "Variant option 3"
+    },
+    {
+        "name": "image",
+        "type": "STRING",
+        "description": "Product image"
+    }
+]
