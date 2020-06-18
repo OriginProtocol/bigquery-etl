@@ -141,8 +141,8 @@ class EtlThread(threading.Thread):
     def _extract(self, start_block, end_block):
         logging.info("Running extraction job for block range {}-{}".format(start_block, end_block))
         job = ExportOriginJob(
-            start_block=start_block,
-            end_block=end_block,
+            start_block=10014454, #start_block,
+            end_block=10014455, #end_block,
             batch_size=JOB_BLOCK_BATCH_SIZE,
             web3=ThreadLocalProxy(lambda: Web3(get_provider_from_uri(self.provider_url))),
             ipfs_client=get_origin_ipfs_client(),
@@ -247,14 +247,16 @@ class EtlCursor(db.Model):
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
     updated_at = db.Column(db.DateTime(timezone=True), onupdate=func.now())
 
-Migrate(app, db)
+migrate = Migrate(app, db)
 
-# Start the thread running the ETL cron.
-thread = EtlThread()
-thread.start()
-
-signal.signal(signal.SIGTERM, thread.sig_handler)
-signal.signal(signal.SIGINT, thread.sig_handler)
+# Start the thread running the ETL cron, unless FLASK_APP is set which indicates this is just
+# a flask db migrate command running.
+if not os.environ.get('FLASK_APP'):
+    thread = EtlThread()
+    thread.start()
+    # Install a signal handler to notify the thread to exit.
+    signal.signal(signal.SIGTERM, thread.sig_handler)
+    signal.signal(signal.SIGINT, thread.sig_handler)
 
 @app.route('/')
 def hello():

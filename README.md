@@ -12,6 +12,11 @@ Create a venv environment and activate it:
     python3 -m venv ./venv
     source venv/bin/activate
 
+Install the dependencies:
+
+    pip install  -r requirements.txt
+
+
 ## Run on local
 Set PROVIDER_URL to a web3 provider. For ex:
 
@@ -31,9 +36,13 @@ Using the GCP console, download the GCP credentials of the service account to us
 
     export GOOGLE_APPLICATION_CREDENTIALS=/Users/franck/src/bigquery-etl/account.json
 
+Run the DB migrations to create the schema:
+
+    FLASK_APP=main flask db upgrade
+
 Start the app. At startup it will create the database schema if it wasn't already populated. It will expose a local server at http://127.0.0.1:8080 and will start a background thread that continuously poll sfor new blocks, extract data and publish it to BigQuery.
 
-    gunicorn main:app
+    python main.py
 
 ## Deploy to GCP App Engine
 Decrypt the secrets to populate the .env file:
