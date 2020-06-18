@@ -249,6 +249,7 @@ if not os.environ.get('FLASK_APP'):
 def stats():
     """Show stats."""
     return "Stats:</br>" + \
+        "Cursor:                                 {}</br>".format(thread.start_block) + \
         "Num DShop rows added to BigQuery:       {}</br>".format(thread.num_dshop_rows) + \
         "Num Marketplace rows added to BigQuery: {}</br>".format(thread.num_marketplace_rows) + \
         "Num errors:                             {}</br>".format(thread.num_errors) + \
