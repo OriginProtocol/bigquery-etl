@@ -27,12 +27,18 @@ Set BIGQUERY_DSHOP_TABLE_ID and BIGQUERY_MARKETPLACE_TABLE_ID to point to the ta
     export BIGQUERY_DSHOP_TABLE_ID='origin-214503.dshop.products'
     export BIGQUERY_MARKETPLACE_TABLE_ID='origin-214503.marketplace.listings'
 
-Set DATABASE _URL to point to your local Postgres DB. For ex:
+Set DATABASE _URL to point to your local Postgres DB. Note that per App Engine docs recommendation,
+we use the pg8000 Python Postgres driver rather than the default SQLAlchemy psycopg2 driver.
+Therefore '+pg8000' MUST be appended to the database dialect. For ex:
 
-    export DATABASE_URL='postgres://origin:origin@localhost/dshop'
+    export DATABASE_URL='postgres+pg8000://origin:origin@localhost/dshop'
 
-Using the GCP console, download the GCP credentials of the service account to use for making API calls to BigQuery as a JSON file. Then point GOOGLE_APPLICATION_CREDENTIALS=/Users/franck/src/forks/ethereum-etl/account.json
- to it. For ex.:
+Using the GCP console, download the GCP credentials of the service account to use
+for making API calls to BigQuery as a JSON file. Then point GOOGLE_APPLICATION_CREDENTIALS
+to it. Service accounts can be found on the GCP console at https://console.cloud.google.com/apis/credentials.
+Click on "Credentials". In production, it uses the default App Engine service account.
+For testing on local, it is preferred to use an account with more restrictive permissions
+such as the "bigquery-etl" one.
 
     export GOOGLE_APPLICATION_CREDENTIALS=/Users/franck/src/bigquery-etl/account.json
 
@@ -40,9 +46,15 @@ Run the DB migrations to create the schema:
 
     FLASK_APP=main flask db upgrade
 
-Start the app. At startup it will create the database schema if it wasn't already populated. It will expose a local server at http://127.0.0.1:8080 and will start a background thread that continuously poll sfor new blocks, extract data and publish it to BigQuery.
+Start the app. At startup it will create the database schema if it wasn't already populated.
+It will expose a local server at http://127.0.0.1:8000 and will start a background thread
+that continuously polls for new blocks, extract data and publish the data to BigQuery.
 
     python main.py
+    
+App Engine in prod uses gunicorn to start the app. You can test that by running:
+
+    gunicorn main:app
 
 ## Deploy to GCP App Engine
 Decrypt the secrets to populate the .env file:
@@ -53,11 +65,10 @@ Deploy the service to prod:
 
     gcloud app deploy
 
-
 ## Troubleshooting
 
 ### Error installing psycopg2
-If the pip install of psycopg2 results in the following error:
+If you want to use the Postgres psycopg2 driver rather than pg8000, and the pip install of psycopg2 results in the following error:
 
     (error  ld: library not found for -lssl)
 

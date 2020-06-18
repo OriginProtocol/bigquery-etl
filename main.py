@@ -32,10 +32,10 @@ START_BLOCK_EPOCH = 10014455 # 6436157
 # Wait for 4 blocks confirmation before extracting the data.
 JOB_BLOCK_LAG = 4
 
-# Batch size for ETL job.
-JOB_BLOCK_BATCH_SIZE = 100
+# Batch size for ETL job. Do not go over 1k which is Alchemy's limit.
+JOB_BLOCK_BATCH_SIZE = 1000
 
-# Number of workers for the job.
+# Max number of workers for the ETL job.
 JOB_MAX_WORKERS = 5
 
 JOB_MARKETPLACE_OUTPUT_FILENAME = tempfile.gettempdir() + '/marketplace.json'
@@ -81,7 +81,6 @@ BIGQUERY_DSHOP_SCHEMA = [
     bigquery.SchemaField("image", "STRING", mode="NULLABLE", description="Product image"),
 ]
 
-
 # Background thread running the ETL job periodically.
 class EtlThread(threading.Thread):
     def __init__(self):
@@ -90,6 +89,10 @@ class EtlThread(threading.Thread):
         self.provider_url = envkey_must_get('PROVIDER_URL')
         self.web3 = Web3(Web3.HTTPProvider(self.provider_url))
         self._init_cursor()
+        self.num_errors = 0
+        self.last_error = None
+        self.num_marketplace_rows = 0
+        self.num_dshop_rows = 0
         logging.info("Job marketplace output file set to {}".format(JOB_MARKETPLACE_OUTPUT_FILENAME))
         logging.info("Job dshop output file set to {}".format(JOB_DSHOP_OUTPUT_FILENAME))
 
@@ -206,37 +209,20 @@ class EtlThread(threading.Thread):
             self._extract(self.start_block, end_block)
 
             # Load the extracted data, if any, to BigQuery.
-            self._load_marketplace()
-            self._load_dshop()
+            self.num_marketplace_rows += self._load_marketplace()
+            self.num_dshop_rows += self._load_dshop()
 
             # Update the cursor.
             self._set_cursor(end_block)
         except Exception as e:
             logging.error('Run failed.', e)
+            self.num_errors += 1
+            self.last_error = e
 
-
-# Helper function. Generates an URL to connect to Postgres.
-# Uses DATABASE_URL env var if set (used for local testing).
-def get_database_url():
-    if os.environ.get('DATABASE_URL'):
-        url = os.environ.get('DATABASE_URL')
-    else:
-        # See https://cloud.google.com/sql/docs/postgres/connect-app-engine-flexible#python
-        db_socket_dir = os.environ.get('DB_SOCKET_DIR', "/cloudsql")
-        cloud_sql_connection_name = os.environ.get('CLOUD_SQL_CONNECTION_NAME', 'origin-214503:us-west1:dshop-mainnet0')
-        url = SqlUrl(
-            drivername="postgres+pg8000",
-            username=envkey_must_get('DB_USER'),
-            password=envkey_must_get('DB_PASSWORD'),
-            database=envkey_must_get('DB_NAME'),
-            query={ "unix_sock": "{}/{}/.s.PGSQL.5432".format(db_socket_dir, cloud_sql_connection_name) }
-        )
-        logging.info("DB URL={}".format(url))
-    return url
 
 # Start the Flask app and run DB migrations.
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
+app.config['SQLALCHEMY_DATABASE_URI'] = envkey_must_get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # Get rid of annoying SQL Alchemy warning at startup.
 
 db = SQLAlchemy(app)
@@ -260,10 +246,13 @@ if not os.environ.get('FLASK_APP'):
     signal.signal(signal.SIGINT, thread.sig_handler)
 
 @app.route('/')
-def hello():
-    """Return a friendly HTTP greeting."""
-    return "Cursor: {}".format(thread.start_block)
-
+def stats():
+    """Show stats."""
+    return "Stats:</br>" + \
+        "Num DShop rows added to BigQuery:       {}</br>".format(thread.num_dshop_rows) + \
+        "Num Marketplace rows added to BigQuery: {}</br>".format(thread.num_marketplace_rows) + \
+        "Num errors:                             {}</br>".format(thread.num_errors) + \
+        "Last error:                             {}</br>".format(thread.last_error)
 
 @app.errorhandler(500)
 def server_error(e):
@@ -277,4 +266,4 @@ def server_error(e):
 if __name__ == '__main__':
     # This is used when running locally. Gunicorn is used to run the
     # application on Google App Engine. See entrypoint in app.yaml.
-    app.run(host='127.0.0.1', port=8080, debug=True)
+    app.run(host='127.0.0.1', port=8000, debug=True)
