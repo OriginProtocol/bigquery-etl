@@ -46,13 +46,13 @@ Run the DB migrations to create the schema:
 
     FLASK_APP=main flask db upgrade
 
-Start the app. At startup it will create the database schema if it wasn't already populated.
+Start the app. At startup it will create the database schema if it wasn't already created.
 It will expose a local server at http://127.0.0.1:8000 and will start a background thread
-that continuously polls for new blocks, extract data and publish the data to BigQuery.
+that continuously polls for new blocks, extracts data and publishes the data to BigQuery.
 
     python main.py
     
-App Engine in prod uses gunicorn to start the app. You can test that by running:
+In prod, App Engine uses gunicorn to start the app. You can test that by running:
 
     gunicorn main:app
 
