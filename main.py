@@ -144,8 +144,8 @@ class EtlThread(threading.Thread):
     def _extract(self, start_block, end_block):
         logging.info("Running extraction job for block range {}-{}".format(start_block, end_block))
         job = ExportOriginJob(
-            start_block=10014454, #start_block,
-            end_block=10014455, #end_block,
+            start_block=start_block,
+            end_block=end_block,
             batch_size=JOB_BLOCK_BATCH_SIZE,
             web3=ThreadLocalProxy(lambda: Web3(get_provider_from_uri(self.provider_url))),
             ipfs_client=get_origin_ipfs_client(),
