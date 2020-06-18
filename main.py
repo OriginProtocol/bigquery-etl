@@ -222,8 +222,8 @@ def get_database_url():
         url = os.environ.get('DATABASE_URL')
     else:
         # See https://cloud.google.com/sql/docs/postgres/connect-app-engine-flexible#python
-        db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/cloudsql")
-        cloud_sql_connection_name = os.environ["CLOUD_SQL_CONNECTION_NAME"]
+        db_socket_dir = os.environ.get('DB_SOCKET_DIR', "/cloudsql")
+        cloud_sql_connection_name = os.environ.get('CLOUD_SQL_CONNECTION_NAME', 'origin-214503:us-west1:dshop-mainnet0')
         url = SqlUrl(
             drivername="postgres+pg8000",
             username=envkey_must_get('DB_USER'),
@@ -231,6 +231,7 @@ def get_database_url():
             database=envkey_must_get('DB_NAME'),
             query={ "unix_sock": "{}/{}/.s.PGSQL.5432".format(db_socket_dir, cloud_sql_connection_name) }
         )
+        logging.info("DB URL={}".format(url))
     return url
 
 # Start the Flask app and run DB migrations.

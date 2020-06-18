@@ -4,7 +4,7 @@ service: ethereum-etl
 entrypoint: gunicorn -b :$PORT main:app
 
 beta_settings:
-  cloud_sql_instances: origin-214503:us-west2:deals-prod-2
+  cloud_sql_instances: origin-214503:us-west1:dshop-mainnet0
 
 runtime_config:
   python_version: 3

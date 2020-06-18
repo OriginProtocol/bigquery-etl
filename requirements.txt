@@ -10,5 +10,6 @@ gunicorn==20.0.4
 envkey
 # Postgres driver
 psycopg2==2.8.5
+pg8000==1.15.3
 # Google BigQuery
 google-cloud-bigquery==1.25.0
