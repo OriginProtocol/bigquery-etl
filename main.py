@@ -92,6 +92,7 @@ class EtlThread(threading.Thread):
         self.last_error = None
         self.num_marketplace_rows = 0
         self.num_dshop_rows = 0
+        self.start_time = int(time.time())
         logging.info("Job marketplace output file set to {}".format(JOB_MARKETPLACE_OUTPUT_FILENAME))
         logging.info("Job dshop output file set to {}".format(JOB_DSHOP_OUTPUT_FILENAME))
 
@@ -255,7 +256,9 @@ if not os.environ.get('FLASK_APP'):
 @app.route('/')
 def stats():
     """Show stats."""
+    uptime = int(time.time()) - thread.start_time
     return "Stats:</br>" + \
+        "Uptime:                                 {}sec</br>".format(uptime) + \
         "Cursor:                                 {}</br>".format(thread.start_block) + \
         "Num DShop rows added to BigQuery:       {}</br>".format(thread.num_dshop_rows) + \
         "Num Marketplace rows added to BigQuery: {}</br>".format(thread.num_marketplace_rows) + \
