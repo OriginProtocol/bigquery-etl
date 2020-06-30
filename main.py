@@ -7,10 +7,9 @@ import threading
 import time
 
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy as _BaseSQLAlchemy
 from flask_migrate import Migrate
 from web3 import Web3
-from sqlalchemy.engine.url import URL as SqlUrl
 from sqlalchemy.sql import func
 
 from ethereumetl.jobs.export_origin_job import ExportOriginJob
@@ -97,6 +96,7 @@ class EtlThread(threading.Thread):
         logging.info("Job dshop output file set to {}".format(JOB_DSHOP_OUTPUT_FILENAME))
 
     def sig_handler(self, signum, frame):
+        logging.info("Thread received signal {}".format(signum))
         self.alive = False
 
     # Helper function that allows the thread to get interrupted by sigint while sleeping.
@@ -110,7 +110,7 @@ class EtlThread(threading.Thread):
         while self.alive:
             logging.info("Running ETL job")
             self._run()
-            logging.info("Sleeping for {} sec...". format(RUN_INTERVAL_SEC))
+            logging.info("Sleeping for {} sec...".format(RUN_INTERVAL_SEC))
             self._wait(RUN_INTERVAL_SEC)
 
     # Initializes the DB and in-memory cursor.
@@ -130,7 +130,7 @@ class EtlThread(threading.Thread):
     # Sets the cursor in the DB and in memory.
     def _set_cursor(self, block_number):
         logging.info("Setting cursor to {}".format(block_number))
-        self.start_block = block_number
+        self.start_block = block_number + 1
         cursors = EtlCursor.query.all()
         if not cursors:
             raise Exception("Failed loading cursor for update")
@@ -158,7 +158,7 @@ class EtlThread(threading.Thread):
     # Loads a JSON file into BigQuery. Returns the number of rows inserted.
     def _bigquery_load(self, data_type, json_data_file, schema, table_id):
         # Check the data export file. If it doesn't exist or is empty there, is nothing to do.
-        data_size = os.path.getsize(json_data_file) if os.path.exists(json_data_file)  else 0
+        data_size = os.path.getsize(json_data_file) if os.path.exists(json_data_file) else 0
         if data_size == 0:
             logging.info("No {} data extracted. Nothing to load to BQ".format(data_type))
             return 0
@@ -198,13 +198,12 @@ class EtlThread(threading.Thread):
         try:
             block = self.web3.eth.getBlock('latest')
             latest_block_number = block['number']
-            logging.debug("Current block is {}".format(latest_block_number))
 
             # Wait for 4 blocks confirmation before indexing the data.
             end_block = latest_block_number - JOB_BLOCK_LAG
-            if end_block <= self.start_block:
+            logging.info("cur_block={} start_block={} end_block={}".format(latest_block_number, self.start_block, end_block))
+            if end_block < self.start_block:
                 return
-
             # Run the extraction job. It extracts the data into local json files.
             self._extract(self.start_block, end_block)
 
@@ -224,6 +223,14 @@ class EtlThread(threading.Thread):
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = envkey_must_get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # Get rid of annoying SQL Alchemy warning at startup.
+
+# Custom SQLAlchemy class to allow to set options on the engine.
+# With the default options, the process would not be able to recover from a database connection disconnect.
+class SQLAlchemy(_BaseSQLAlchemy):
+    def apply_pool_defaults(self, app, options):
+        # See pool options doc: https://docs.sqlalchemy.org/en/13/core/pooling.html#sqlalchemy.pool.Pool
+        options["pool_recycle"] = 5
+        super(SQLAlchemy, self).apply_pool_defaults(app, options)
 
 db = SQLAlchemy(app)
 
