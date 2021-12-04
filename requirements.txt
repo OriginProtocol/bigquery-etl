@@ -12,3 +12,4 @@ envkey
 pg8000==1.15.3
 # Google BigQuery
 google-cloud-bigquery==1.25.0
+websockets>=10.0 # not directly required, pinned by Snyk to avoid a vulnerability
