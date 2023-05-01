@@ -3,7 +3,7 @@
 # In the meantime, use origin-etl which is a fork.
 origin-etl==0.0.1
 # For AppEngine
-Flask==1.1.2
+Flask==2.3.2
 Flask-SQLAlchemy==2.4.3
 Flask-Migrate==2.5.3
 gunicorn==20.0.4
